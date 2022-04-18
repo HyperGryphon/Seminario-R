@@ -1,5 +1,5 @@
 # Seminário-R
-Dados e scripts para o seminário de R.
+Dados e scripts para o seminário de R. Na pasta [data](https://github.com/HyperGryphon/Seminario-R/tree/main/data) estão os arquivos com os dados que usaremos no seminário. Na pasta [scripts](https://github.com/HyperGryphon/Seminario-R/tree/main/scripts) estão os códigos. Estos últimos serão atualizados às versões finais após o seminário.
 
 ## Requerimentos
 * Instalar R baixando o arquivo [daqui](https://cloud.r-project.org/bin/windows/base/R-4.1.3-win.exe)
