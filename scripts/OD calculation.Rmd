@@ -1,0 +1,181 @@
+---
+title: "Overdispersion calculation"
+author: "Ian del Rio"
+date: "08/03/2021"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: flatly
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: no
+---
+
+# Introduction
+
+We will try to replicate the Central Age Model (CAM, Galbraith and Roberts, 2012) calculation *by hand* from the Luminescence package using the equations:
+$$\delta = \frac{\sum_{i=1}^{n}w_id_i}{\sum_{i=1}^{n}w_i}$$
+and
+
+$$\sum_{i=1}^{n}w_i^2(d_i-\delta)^2=\sum_{i=1}^{n}w_i$$
+
+where
+
+$$w_i=\frac{1}{(\sigma^2+\sigma_{wi}^2)}$$
+
+Then we will try to estimate the intrinsic and extrinsic overdispersion values following Smedley et al. (2020).
+
+Also, it is intended to show how to use RMarkdown for quickly publication of code embeded into a file, which will be useful for future reference and preparation of classes of R, maybe even to be introduced in the Luminescence course. For that we will try to use as many tools as we can in order to master them.
+
+**It is intended that the user replicates the code chunks (boxes in gray) in his/her own device.**
+
+# Preparation
+
+Check whether the needed packages are loaded and load them if not
+
+```{r setup}
+test1 <- require(Luminescence)
+print(test1)
+test2 <- require(readxl)
+print(test2)
+```
+
+If results in anything other than ```TRUE``` it won't work. In case of some problem, please check the luminescence package [manual](https://cran.r-project.org/web/packages/Luminescence/Luminescence.pdf) or the R [cheatsheets](https://rstudio.com/resources/cheatsheets/).
+
+## Clean everything
+
+```{r clean}
+rm(list = ls())
+graphics.off()
+```
+
+## Load packages
+
+```{r packages}
+library(Luminescence)
+library(readxl)
+```
+
+## Set directory
+
+```{r directory}
+setwd("C:/Users/iande/Downloads/seminario R/")
+```
+
+## Load files
+
+```{r}
+De.data <- read.csv("Dating_L1415_R2_1.csv", sep = ',')
+```
+
+# Initialize variables to reproduce the Central Age Model estimation
+Here you are going to define the value of sigmab which is the and whether you are going to use the logged or the un-logged model
+
+```{r}
+sigmab <- 0
+log <- T
+```
+
+
+# Estimate the Central Age Model
+
+```{r}
+cam <- calc_CentralDose(data.frame(De.data$De, De.data$De.err), plot = T, log = log)
+```
+
+From the analyzed dataset we obtained a **De of `r round(cam$summary$de,1)` ± `r round(cam$summary$de_err,1)` Gy** and the **OD is `r round(cam$summary$rel_OD,1)` %**.
+
+# Prepare the data in case you are using the logged or un-logged model
+
+* *yu* is the dose
+* *su* is the standard deviation
+```{r}
+if (log) {
+  yu <- log(De.data$De)
+  su <- sqrt((De.data$De.err/De.data$De)^2+sigmab^2)
+} else {
+  yu <- De.data$De
+  su <- sqrt((De.data$De.err)^2+sigmab^2)
+}
+```
+
+# Initialize the variables for OD calculation using a *for* loop
+
+* *sigma* is the initial overdispersion value
+* *wu* is the standard deviation of the overdispersion
+* *delta* is the final equivalent dose
+```{r}
+sigma = 0.15 #starting value
+wu = 1/(sigma^2+su^2)
+delta = sum(wu*yu)/sum(wu)
+```
+
+# OD estimation through maximum likelihood estimate
+The first line indicate that is going to do 200 iterations, which should be enough to reach a reliable value.
+```{r}
+for (i in 1:200) {
+  delta <- sum(wu*yu)/sum(wu)
+  sigma <- sigma*sqrt(sum((wu^2)*(yu-delta)^2/sum(wu)))
+  wu <- 1/(sigma^2+su^2)
+}
+```
+
+## Refine results
+```{r}
+dose <- ifelse(log, exp(delta), delta)
+dose.sd <- 1/sqrt(sum(wu))
+od <- ifelse(log, sigma*100, sigma/dose*100)
+od.sd <- 1/sqrt(2*sigma^2*sum(wu^2))
+```
+
+## Estimate standard errors
+```{r}
+if (log) {
+  out.dose.sd <- dose.sd*100
+  out.od.sd <- od.sd
+} else {
+  out.dose.sd <- dose.sd/dose*100
+  out.od.sd <- sqrt((dose.sd/dose)^2 +(od.sd/out.dose*100/out.od)^2)*out.od/100
+}
+```
+
+## Condense results
+We use the function ```data.frame()``` to put all the obtained results (as vectors) in columns and building a table named ```camres```. By using the function ```colnames()``` we define the names of the columns.
+```{r}
+dose.sd = dose*dose.sd
+od.sd = od.sd*100
+int.od = od; ext.od = 20
+tot.od = sqrt(int.od^2+ext.od^2)
+camres = data.frame(round(dose,2), round(dose.sd,2), round(od,2), round(od.sd,2), round(tot.od,2))
+colnames(camres) = c("De", "De.sd", "Int.OD", "Int.OD.sd", "Tot.OD")
+camres
+```
+
+We can check the accuracy of the calculation *by hand* comparing the estimation done using the luminescence package CAM function. Again, the resulting **De is `r round(camres$De,1)` ± `r round(camres$De.sd,1)` Gy** and the **OD is `r round(camres$Int.OD,1)` %**.
+
+# OD model by Smedley et al. (2020)
+Now let's see how the intrinsic, extrinsic and total OD vary. 
+
+According to the authors, the OD is the sum of the intrinsic and extrinsic ODs. They recommend to add a 20% of OD in quadrature to the intrinsic OD, which would be the OD that we just obtained.
+
+The next lines show how to plot a simple equation to obtain the variation in OD from 0 to 100% adding the mentioned 20% of extrinsic OD.
+```{r fig.cap = "Total vs Measured OD in %."}
+#png("ODvsOD.png", type = "cairo", height = 2000, width = 2200, res = 300)
+par(mar = c(5,5,1.5,1.5))
+plot(0:100, sqrt((0:100)^2+20^2), xlim = c(0,100), ylim = c(0,100), type = "l", lty = 1, lwd = 2,
+     xlab = "Measured OD (%)", ylab = "Calculated OD (%)", xaxs = "i", yaxs = "i",
+     cex.lab = 1.5, cex.axis = 1.5)
+abline(0,1, lty = 2, lwd = 2)
+legend("topleft", c("Calculated OD", "Measured OD"), lty = c(1,2), lwd = 2, cex = 1.5)
+#dev.off()
+```
+
+If you want to export this last graph you need to delete the ```#``` in the lines above.
+
+# References
+
+Galbraith, R.F., and Roberts, R.G., 2012. Statistical aspects of equivalent dose and error calculation and display in OSL dating: An overview and some recommendations. *Quaternary Geochronology*, 11, 1-27, doi: [10.1016/j.quageo.2012.04.020](https://www.sciencedirect.com/science/article/pii/S1871101412000957?via%3Dihub)
+
+Smedley, R.K., Duller, G.A.T., Rufer, D., Utley, J.E.P., 2020. Empirical assessment of beta dose heterogeneity in sediments: Implications for luminescence dating. *Quaternary Geochronology*, 56, 101052, doi: [10.1016/j.quageo.2020.101052](https://www.sciencedirect.com/science/article/pii/S1871101420300017?via%3Dihub)

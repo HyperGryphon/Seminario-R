@@ -1,0 +1,67 @@
+---
+title: "usp"
+author: "Ian del Rio"
+date: "14/4/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+rm(list = ls())
+graphics.off()
+
+library(ggplot2); library(ggthemes); library(tidyverse)
+
+setwd('C:/Users/iande/Downloads/seminario R/')
+
+data <- read.csv('salarios usp 2020.csv', sep = ';')
+per <- data[-which(data$Depto.Setor=='Inativo'),]
+
+per <- per[per$Unid.Orgao=='IGc',]
+
+per %>% filter(Classe %in% c('Superior 1','Superior 2','Superior 3','Superior 4')) -> sup
+per %>% filter(Classe %in% c('Técnico 1','Técnico 2', 'Técnico 3')) -> tec
+per %>% filter(Classe %in% c('Prof Doutor','Prof Titular')) -> doc
+
+lm(tec$Liquido~tec$Tempo_USP)
+lm(sup$Liquido~sup$Tempo_USP)
+lm(doc$Liquido~doc$Tempo_USP)
+
+#pdf('salarios.pdf',height = 10, width = 12)
+par(mar=c(5,5,1.5,1.5))
+ggplot(per, aes(Tempo_USP, Liquido, group = Nome))+
+  geom_point(aes(colour=Classe),size=3)+
+  labs(x='Tempo USP (anos)', y = 'Salario Liquido (R$)')+
+  theme_bw()+
+  theme(axis.text.x = element_text(size = 15, angle = 0, hjust = 0.5),
+        axis.text.y = element_text(size = 15),
+        axis.title.x = element_text(size = 15),
+        axis.title.y = element_text(size = 15),
+        axis.ticks = element_line(size = 1),
+        axis.ticks.length = unit(.2, 'cm'),
+        legend.position = 'top',
+        legend.title = element_blank(),
+        legend.text = element_text(size = 15),
+        panel.border = element_rect(fill = NA))->g1
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plotly::ggplotly(g1)
+#dev.off()
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
