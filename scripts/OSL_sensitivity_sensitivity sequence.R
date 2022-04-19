@@ -3,18 +3,18 @@ graphics.off()
 
 library(Luminescence); library(tidyverse); library(xlsx)
 #chose directory
-setwd('C:/Users/iande/Downloads/seminario R/')
+#setwd('C:/Users/iande/Downloads/seminario R/')
 #chose sample
-sample <- 'Sens_Polimin_155855-59-61-65-67-83-93-155909-19_R1_210224.binx'
+sample <- 'data/SensParnaiba_primeirolote_150209.binx'
 
 data <- read_BIN2R(sample)
 n.aliquots <- length(unique(data@METADATA$POSITION))
 #n.samples <- n.aliquots/9
 
 #samples name and how many aliquots per sample
-samples <- c(rep('155855', 5), rep('155859', 5), rep('155861', 5), rep('155865', 5),
-            rep('155867', 5), rep('155883', 5), rep('155893', 5), rep('155909', 5),
-            rep('155919', 5))
+samples <- c(rep('BP75A', 4), rep('BP86', 4), rep('BP89', 4), rep('BP92', 4),
+            rep('BP100', 4), rep('BP106', 4), rep('BP204', 4), rep('BP207', 4),
+            rep('BP211', 4), rep('BP214', 4), rep('BP244', 4), rep('BP98', 4))
 #units name and how many samples per unit
 #units <- c(rep('Amazon', 8), rep('Xingu', 8))
 
@@ -30,7 +30,7 @@ components <- 3
 plot.deconv <- F
 
 #How many degrees per channel for TL signals
-degree <- 2
+degree <- 1.8
 
 #integration intervals, check channels/s for sensitivity calculation
 natint <- 1:4; natbg <- 361:400; nattot <- 1:400
@@ -75,7 +75,7 @@ tlbg <- data.frame(tlbg@DATA)
 
 sens.nat <- 1:n.aliquots
 for (i in 1:n.aliquots) {
-  sens.nat[i] <- (sum(nat[natint,i])-mean(nat[natbg,i]*max(natint)))/(sum(nat[nattot,i])-mean(nat[natbg,i]*max(natbg)))*100
+  sens.nat[i] <- (sum(nat[natint,i])-mean(nat[natbg,i]*length(natint)))/(sum(nat[nattot,i])-mean(nat[natbg,i]*length(natint)))*100
 }
 
 sens.itl <- 1:n.aliquots
@@ -91,11 +91,11 @@ for (i in 1:n.aliquots) {
   
   osl.s[i] <- sum(osl[oslint,i])
   osl.total[i] <- sum(osl[osltot,i])
-  bg.osl[i] <- mean(osl[oslbg,i])*length(osl[oslint,i])
+  bg.osl[i] <- mean(osl[oslbg,i])*length(oslint)
   sd.bg.osl[i] <- sd(osl[oslbg,i])
-  bg.total[i] <- mean(osl[oslbg,i])*length(osl[oslint,i])
+  bg.total[i] <- mean(osl[oslbg,i])*length(osltot)
   # OSL in cts/1s
-  osl.cts[i] <- (osl.s[i]-bg.osl[i]) #/(doses[i]*8.9) #cts/Gy·mg
+  osl.cts[i] <- (osl.s[i]-bg.osl[i]) #/(doses[i]*8.9) #cts/Gy?mg
   # BOSLF
   sens.osl[i] <- (osl.s[i]-bg.osl[i])/(osl.total[i]-bg.total[i])*100
   
@@ -115,8 +115,8 @@ for (i in 1:n.aliquots) {
 
 sens.irsl <- 1:n.aliquots; irsl.cts <- 1:n.aliquots
 for (i in 1:n.aliquots) {
-  irsl.cts[i] <- sum(irsl[irslint,i])-mean(irsl[irslbg,i]*max(irslint))
-  sens.irsl[i] <- (sum(irsl[irslint,i])-mean(irsl[irslbg,i]*max(irslint)))/(sum(osl[oslint,i])-mean(osl[oslbg,i]*max(oslint)))*100
+  irsl.cts[i] <- sum(irsl[irslint,i])-mean(irsl[irslbg,i]*length(irslint))
+  sens.irsl[i] <- (sum(irsl[irslint,i])-mean(irsl[irslbg,i]*length(irslint)))/(sum(osl[oslint,i])-mean(osl[oslbg,i]*length(oslint)))*100
 }
 
 fast.prop <- 1:n.aliquots; med.prop <- 1:n.aliquots; slow.prop <- 1:n.aliquots; slow.2.prop <- 1:n.aliquots
@@ -205,8 +205,8 @@ slow.prop[is.na(slow.prop)] <- 0
 
 sens.tl325 <- 1:n.aliquots; tl325.cts <- 1:n.aliquots
 for (i in 1:n.aliquots) {
-  tl325.cts[i] <- sum(tl325[tl325int,i])-sum(tlbg[tl325bg,i])
-  sens.tl325[i] <- ((sum(tl325[tl325int,i])-sum(tlbg[tl325bg,i]))/(sum(tl325[tl325tot,i])-sum(tlbg[tl325tot,i])))*100 
+  tl325.cts[i] <- sum(tl325[tl325int,i])-mean(tlbg[tl325bg,i])*length(tl325int)
+  sens.tl325[i] <- ((sum(tl325[tl325int,i])-mean(tlbg[tl325bg,i])*length(tl325int))/(sum(tl325[tl325tot,i])-mean(tlbg[tl325bg,i])*length(tl325tot)))*100 
 }
 
 tl325pos <- 1:n.aliquots
@@ -216,8 +216,8 @@ for (i in 1:n.aliquots) {
 
 sens.tl110 <- 1:n.aliquots; tl110.cts <- 1:n.aliquots
 for (i in 1:n.aliquots) {
-  tl110.cts[i] <- sum(tl110[tl110int,i])-sum(tlbg[tl110bg,i])
-  sens.tl110[i] <- ((sum(tl110[tl110int,i])-sum(tlbg[tl110bg,i]))/(sum(tl110[tl110tot,i])-sum(tlbg[tl110tot,i])))*100 
+  tl110.cts[i] <- sum(tl110[tl110int,i])-mean(tlbg[tl110bg,i])*length(tl110int)
+  sens.tl110[i] <- ((sum(tl110[tl110int,i])-mean(tlbg[tl110bg,i])*length(tl110int))/(sum(tl110[tl110tot,i])-mean(tlbg[tl110bg,i])*length(tl110tot)))*100 
 }
 
 tl110pos <- 1:n.aliquots
@@ -240,6 +240,6 @@ colnames(res.sample) <- c('Sample', 'IRSL/BOSL1s','IRSL/BOSL1s.sd', 'IRSL cts', 
                     'TL325pos','TL325pos.sd', 'TL110oC','TL110oC.sd', 'TL110oC cts','TL110oC cts.sd', 'TL110pos','TL110pos.sd')
 view(res.sample)
 
-setwd('C:/Users/iande/Documentos/proyectos/fernanda/')
+#setwd('data')
 write.xlsx(data, file = paste0(str_sub(sample, 1, -6),'.xlsx'), sheetName = 'by_aliquot', append = T)
 write.xlsx(res.sample, file = paste0(str_sub(sample, 1, -6),'.xlsx'), sheetName = 'by_sample', append = T)

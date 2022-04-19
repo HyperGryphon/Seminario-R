@@ -3,8 +3,8 @@ graphics.off()
 
 library(Luminescence); library(Hmisc); library(tidyverse)
 
-setwd('C:/Users/iande/Downloads/seminario R/')
-sample0 <- read_BIN2R('Dating_L1415_R2_191220.binx')
+#setwd('C:/Users/iande/Downloads/seminario R/')
+sample0 <- read_BIN2R('data/Dating_L1415_R2_191220.binx')
 
 name <- stringr::str_sub(sample0@METADATA$FNAME[1], 8, 12)
 
@@ -75,7 +75,7 @@ for (i in unique(sample0@METADATA$POSITION)) {
   legend('topleft', legend = c(paste0('Sample ', name, ' aliquot: ', i), paste0('De = ', round(De.data$De, 1), ' \u00B1 ', round(De.data$De.Error,1), ' Gy'),
                                paste0('D0 = ', round(De.data$D0, 0), ' Gy')),
          cex = 1.5, bty='n')
-  #líneas de interpolación
+  #l?neas de interpolaci?n
   segments(x0 = 0, x1 = De.data$De, y0 = LxTx.Data$LxTx[1], y1 = LxTx.Data$LxTx[1], col = 'red', lwd = 3, lty = 2)
   segments(x0 = De.data$De, x1 = De.data$De, y0 = 0, y1 = LxTx.Data$LxTx[1], col = 'red', lwd = 3, lty = 2)
   
@@ -166,7 +166,7 @@ plot_KDE(results.subset, main = '', yaxt = 'n', na.rm = T,
          pch = 19, lwd = 2,
          yaxs = 'i')
 
-#añadir lineas al kde plot
+#a?adir lineas al kde plot
 abline(v = camres$de,
        col = 'black', lty = 2)
 caminfo <- paste('Sample', name, '\U007C CAM:', paste0(round(camres$de, 1), ' \U00B1 ',

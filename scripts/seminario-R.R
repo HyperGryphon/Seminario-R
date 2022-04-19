@@ -38,7 +38,7 @@ graphics.off()
 getwd()
 #setwd()
 
-usp <- read.csv('salarios usp 2020.csv', sep = ';')
+usp <- read.csv('data/salarios usp 2020.csv', sep = ';')
 skimr::skim_without_charts(usp)
 
 max(usp$Liquido)
@@ -51,6 +51,8 @@ nome <- usp$Nome[usp$Unid.Orgao=='IGc' & usp$Categoria=='Docente']
 tempo <- usp$Tempo_USP[usp$Unid.Orgao=='IGc' & usp$Categoria=='Docente']
 dataframe <- data.frame(nome,tempo)
 dataframe[order(dataframe$tempo),]
+
+usp %>% filter(usp$Tempo_USP<3 & usp$Unid.Orgao=='IGc' & usp$Depto.Setor!='Inativo') %>% view()
 
 
 #graphics######################################################################
@@ -140,3 +142,19 @@ legend('topleft', col = c(1,2), lwd = 2,
        legend=c('y',
          paste('Relative rmse : ', 
                     round((sqrt(sum((fit$m$fitted()-y)^2)/length(y))/mean(y))*100,1),'%')))
+
+
+#defining our functions
+my.fun <- function(x,y) {
+  res <- (x^2)+y 
+  return(res)
+}
+
+my.fun(2,3)
+
+text2num <- function(text) {
+  num <- as.numeric(text)
+  return(num)
+}
+
+text2num(text = c('1','14', '4464'))
