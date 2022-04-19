@@ -3,8 +3,8 @@ graphics.off()
 
 pacman::p_load(caret,GGally,magrittr,pacman,parallel,randomForest,rattle,rio,tictoc,tidyverse,ggfortify)
 
-setwd("C:/Users/iande/Downloads/seminario R/")
-data = readxl::read_excel("osl_parnaiba_table.xlsx", sheet = "by_aliquot") %>%
+#setwd("data/seminario R/")
+data = readxl::read_excel("data/osl_parnaiba_table.xlsx", sheet = "by_aliquot") %>%
   print()
 
 data$BOSLF = as.numeric(data$BOSLF)
@@ -34,8 +34,7 @@ for (i in 1:length(data$BOSL1s)) {
 
 data %<>%
   #mutate(osl.t = ifelse(osl>=9,"High","Medium"), osl.t = as_factor(osl.t)) %>%
-  mutate(osl.t = as.factor(osl.t)) %>%
-  print()
+  mutate(osl.t = as.factor(osl.t))
 
 data %>%
   ggplot()+
@@ -55,6 +54,7 @@ toc()
 
 t.test(data$BOSL1s,data$BOSLF)
 
+#Regression####################################################################
 # fit linear regression ####
 fit.lm = data %>%
   select(BOSL1s, BOSLF:TL325pos, Group:Unit) %>%
@@ -85,14 +85,12 @@ osl.p = fit.knn %>%
   predict(newdata = train)
 
 table(actualclass = train$Unit, predictedclass = osl.p) %>% 
-  confusionMatrix() %>% 
-  print()
+  confusionMatrix()
 
 #KNN on test data
 osl.p = predict(fit.knn, newdata = test)
 table(actualclass = test$Unit, predictedclass = osl.p) %>% 
-  confusionMatrix() %>% 
-  print()
+  confusionMatrix()
 
 #Decision tree on training data ####
 set.seed(10000)
@@ -119,18 +117,16 @@ fit.dt$finalModel %>%
 
 osl.p = fit.dt %>% predict(newdata = train)
 table(actualclass = train$Unit, predictedclass = osl.p) %>% 
-  confusionMatrix() %>% 
-  print()
+  confusionMatrix()
 
 #Decision tree on test data
 osl.p = fit.dt %>% predict(newdata = test)
 table(actualclass = test$Unit, predictedclass = osl.p) %>% 
-  confusionMatrix() %>% 
-  print()
+  confusionMatrix()
 
 # Random forest of decision trees on training data ####
 #set.seed(123)
-train = data %>% sample_frac(.66)
+train = data %>% slice_sample(.66)
 test = anti_join(data, train)
 
 control = trainControl(method = "repeatedcv", number = 10, repeats = 3, search = "random",
@@ -147,20 +143,20 @@ fit.rf %>% plot()
 fit.rf$finalModel
 fit.rf$finalModel %>% plot()
 
-osl.p = predict(fit.rf, newdata = train)
-table(actualclass = train$Unit, predictedclass = osl.p) %>% 
-  confusionMatrix() %>% 
-  print()
+osl.t = predict(fit.rf, newdata = train)
+table(actualclass = train$Unit, predictedclass = osl.t) %>% 
+  confusionMatrix()
 
 #Random forest on test data
 osl.p = predict(fit.rf, newdata = test)
 table(actualclass = test$Unit, predictedclass = osl.p) %>% 
-  confusionMatrix() %>% 
-  print()
+  confusionMatrix()
 
 # Summary of results ####
 test %>% pull(osl.t) %>% summary()
 
+
+#Classification#################################################################
 # Hierarchical clustering #####
 library(factoextra); library(cluster); library(magrittr)
 hc = data %>%

@@ -38,6 +38,22 @@ graphics.off()
 getwd()
 #setwd()
 
+#defining our own functions
+my.fun <- function(x,y) {
+  res <- (x^2)+y 
+  return(res)
+}
+
+my.fun(2,3)
+
+text2num <- function(text) {
+  as.numeric(text)
+}
+
+text2num(text = c('1','14', '4464'))
+
+#working with data, filtering and such
+
 usp <- read.csv('data/salarios usp 2020.csv', sep = ';')
 skimr::skim_without_charts(usp)
 
@@ -143,18 +159,3 @@ legend('topleft', col = c(1,2), lwd = 2,
          paste('Relative rmse : ', 
                     round((sqrt(sum((fit$m$fitted()-y)^2)/length(y))/mean(y))*100,1),'%')))
 
-
-#defining our functions
-my.fun <- function(x,y) {
-  res <- (x^2)+y 
-  return(res)
-}
-
-my.fun(2,3)
-
-text2num <- function(text) {
-  num <- as.numeric(text)
-  return(num)
-}
-
-text2num(text = c('1','14', '4464'))
