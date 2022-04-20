@@ -9,10 +9,11 @@ result <- 1+5*4-4/8
 result
 
 sequencia <- c(1,2,3,4,5)
+sequencia <- seq(1,5,1)
 sequencia
 
-data <- data.frame(seq = seq(1,5,1), 
-                   norm = rnorm(5,0.5,0.5), #round(rnorm(5,0.5,0.5),2),
+data <- data.frame(sequencia, 
+                   norm = rnorm(5,0.5,0.5), 
                    str = c('A','ppp','12c','V-V',' '))
 data
 #View(data)
@@ -68,7 +69,10 @@ tempo <- usp$Tempo_USP[usp$Unid.Orgao=='IGc' & usp$Categoria=='Docente']
 dataframe <- data.frame(nome,tempo)
 dataframe[order(dataframe$tempo),]
 
-usp %>% filter(usp$Tempo_USP<3 & usp$Unid.Orgao=='IGc' & usp$Depto.Setor!='Inativo') %>% view()
+usp %>% filter(usp$Tempo_USP<5 
+               & usp$Unid.Orgao=='IGc' 
+               & usp$Depto.Setor!='Inativo') %>% 
+  view()
 
 
 #graphics######################################################################

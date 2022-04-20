@@ -1,4 +1,5 @@
-packages <- c('Luminescence', 'skimr', 'tidyverse', 'minpack.lm', 'Hmisc', 'xlsx')
+packages <- c('Luminescence', 'skimr', 'tidyverse', 'minpack.lm', 'Hmisc', 'xlsx',
+              'caret','pacman','ggfortify')
 
 package.check <- lapply(
   packages,
