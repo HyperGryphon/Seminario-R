@@ -71,6 +71,12 @@ table(actualclass = test$Unit, predictedclass = osl.p$osl.p) %>%
 test %>% pull(osl.c) %>% summary()
 
 #ROC
+require(randomForest)
+data <- as.data.frame(data)
+data <- data[,-c(1,2,4,13,14)]
+data$Unit <- factor(data$Unit)
+model <- randomForest(Unit~., data=data)
+
 test$unit2num[test$Unit=='Serra Grande'] <- 1
 test$unit2num[test$Unit=='Pimenteiras'] <- 2
 test$unit2num[test$Unit=='Cabecas'] <- 3
@@ -89,15 +95,26 @@ osl.p$unit2num[osl.p$osl.p=='Piaui'] <- 6
 osl.p$unit2num[osl.p$osl.p=='Motuca'] <- 7
 osl.p$unit2num[osl.p$osl.p=='Sambaiba'] <- 8
 
-multiclass.roc(test$unit2num, osl.p$unit2num, plot=T) %>% auc()
+data$unit2num[data$Unit=='Serra Grande'] <- 1
+data$unit2num[data$Unit=='Pimenteiras'] <- 2
+data$unit2num[data$Unit=='Cabecas'] <- 3
+data$unit2num[data$Unit=='Longa'] <- 4
+data$unit2num[data$Unit=='Poti'] <- 5
+data$unit2num[data$Unit=='Piaui'] <- 6
+data$unit2num[data$Unit=='Motuca'] <- 7
+data$unit2num[data$Unit=='Sambaiba'] <- 8
 
-require(randomForest)
-data <- as.data.frame(data)
-data <- data[,-c(1,2,4,13,14)]
-data$Unit <- factor(data$Unit)
-model <- randomForest(Unit~., data=data)
+res.rf <- data.frame(model$predicted)
+res.rf$mod2num[res.rf$model.predicted=='Serra Grande'] <- 1
+res.rf$mod2num[res.rf$model.predicted=='Pimenteiras'] <- 2
+res.rf$mod2num[res.rf$model.predicted=='Cabecas'] <- 3
+res.rf$mod2num[res.rf$model.predicted=='Longa'] <- 4
+res.rf$mod2num[res.rf$model.predicted=='Poti'] <- 5
+res.rf$mod2num[res.rf$model.predicted=='Piaui'] <- 6
+res.rf$mod2num[res.rf$model.predicted=='Motuca'] <- 7
+res.rf$mod2num[res.rf$model.predicted=='Sambaiba'] <- 8
 
-max.voted <- pmax(model$votes[,1],model$votes[,2], model$votes[,3], model$votes[,4],
-                  model$votes[,5],model$votes[,6], model$votes[,7], model$votes[,8])
+roc <- roc(data$Unit, res.rf$mod2num)
+auc(roc)
+plot(roc, main='Receiver Operating Characteristic curve')
 
-multiclass.roc(data$Unit, max.voted, plot=T)
