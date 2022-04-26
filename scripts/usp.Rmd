@@ -2,7 +2,11 @@
 title: "usp"
 author: "Ian del Rio"
 date: "14/4/2022"
-output: html_document
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    theme: flatly
 ---
 
 ```{r setup, include=FALSE}
@@ -11,7 +15,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see next [link](http://rmarkdown.rstudio.com).
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
@@ -21,9 +25,9 @@ graphics.off()
 
 library(ggplot2); library(ggthemes); library(tidyverse)
 
-setwd('C:/Users/iande/Downloads/seminario R/')
+setwd('C:/Users/iande/Documentos/git/Seminario-R/')
 
-data <- read.csv('salarios usp 2020.csv', sep = ';')
+data <- read.csv('data/salarios usp 2020.csv', sep = ';')
 per <- data[-which(data$Depto.Setor=='Inativo'),]
 
 per <- per[per$Unid.Orgao=='IGc',]
@@ -65,3 +69,5 @@ plotly::ggplotly(g1)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+Showing that this piece of code `r mean(doc$Liquido)` works.
