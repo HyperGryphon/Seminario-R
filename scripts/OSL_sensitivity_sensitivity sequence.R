@@ -1,9 +1,9 @@
 rm(list = ls())
 graphics.off()
 
-library(Luminescence); library(tidyverse); library(xlsx)
+library(Luminescence); library(tidyverse); library(readxl)
 #chose directory
-#setwd('C:/Users/iande/Downloads/seminario R/')
+setwd('C:/Users/iande/Documentos/git/Seminario-R/')
 #chose sample
 sample <- 'data/SensParnaiba_primeirolote_150209.binx'
 
@@ -35,7 +35,7 @@ degree <- 1.8
 #integration intervals, check channels/s for sensitivity calculation
 natint <- 1:4; natbg <- 361:400; nattot <- 1:400
 itlint <- 1:10; itlbg <- 200:250; itltot <- 1:250
-irslint <- 1:3; irslbg <- 721:750; irsltot <- 1:750
+irslint <- 1:8; irslbg <- 721:750; irsltot <- 1:750
 oslint <- 1:4; oslbg <- 361:400; osltot <- 1:400
 tl325int <- (240/degree):(380/degree); tl325bg <- (240/degree):(380/degree); tl325tot <- 1:250
 tl110int <- (70/degree):(170/degree); tl110bg <- (70/degree):(170/degree); tl110tot <- 1:250
@@ -83,10 +83,10 @@ for (i in 1:n.aliquots) {
   sens.itl[i] <- sum(itl[itlint,i])-(sum(itl[itlbg,i]))*0.2
 }
 
-osl.s <- 1:n.aliquots; bg.osl <- 1:n.aliquots
-osl.total <- 1:n.aliquots; bg.total <- 1:n.aliquots
-sens.osl <- 1:n.aliquots; osl.cts <- 1:n.aliquots
-sens <- 1:n.aliquots; sd.bg.osl <- 1:n.aliquots
+osl.s <- bg.osl <- 1:n.aliquots
+osl.total <- bg.total <- 1:n.aliquots
+sens.osl <- osl.cts <- 1:n.aliquots
+sens <- sd.bg.osl <- 1:n.aliquots
 for (i in 1:n.aliquots) {
   
   osl.s[i] <- sum(osl[oslint,i])
@@ -116,11 +116,11 @@ for (i in 1:n.aliquots) {
 sens.irsl <- 1:n.aliquots; irsl.cts <- 1:n.aliquots
 for (i in 1:n.aliquots) {
   irsl.cts[i] <- sum(irsl[irslint,i])-mean(irsl[irslbg,i]*length(irslint))
-  sens.irsl[i] <- (sum(irsl[irslint,i])-mean(irsl[irslbg,i]*length(irslint)))/(sum(osl[oslint,i])-mean(osl[oslbg,i]*length(oslint)))*100
+  sens.irsl[i] <- irsl.cts[i]/(sum(osl[oslint,i])-mean(osl[oslbg,i]*length(oslint)))*100
 }
 
-fast.prop <- 1:n.aliquots; med.prop <- 1:n.aliquots; slow.prop <- 1:n.aliquots; slow.2.prop <- 1:n.aliquots
-fast <- 1:n.aliquots; med <- 1:n.aliquots; slow <- 1:n.aliquots; slow.2 <- 1:n.aliquots
+fast.prop <- med.prop <-  slow.prop <-  slow.2.prop <- 1:n.aliquots
+fast <- med <- slow <- slow.2 <- 1:n.aliquots
 for (i in 1:n.aliquots) {
   fit <- fit_CWCurve(data.frame(t,osl[,i]), n.components.max = components, fit.method = "LM",
                      fit.trace = F, fit.failure_threshold = T, 
@@ -203,7 +203,7 @@ fast.prop[is.na(fast.prop)] <- 0
 med.prop[is.na(med.prop)] <- 0
 slow.prop[is.na(slow.prop)] <- 0
 
-sens.tl325 <- 1:n.aliquots; tl325.cts <- 1:n.aliquots
+sens.tl325 <- tl325.cts <- 1:n.aliquots
 for (i in 1:n.aliquots) {
   tl325.cts[i] <- sum(tl325[tl325int,i])-mean(tlbg[tl325bg,i])*length(tl325int)
   sens.tl325[i] <- ((sum(tl325[tl325int,i])-mean(tlbg[tl325bg,i])*length(tl325int))/(sum(tl325[tl325tot,i])-mean(tlbg[tl325bg,i])*length(tl325tot)))*100 
@@ -214,7 +214,7 @@ for (i in 1:n.aliquots) {
   tl325pos[i] <- which.max(abs(tl325[tl325int,i]))*degree-degree+tl325int[1]*degree-degree
 }
 
-sens.tl110 <- 1:n.aliquots; tl110.cts <- 1:n.aliquots
+sens.tl110 <- tl110.cts <- 1:n.aliquots
 for (i in 1:n.aliquots) {
   tl110.cts[i] <- sum(tl110[tl110int,i])-mean(tlbg[tl110bg,i])*length(tl110int)
   sens.tl110[i] <- ((sum(tl110[tl110int,i])-mean(tlbg[tl110bg,i])*length(tl110int))/(sum(tl110[tl110tot,i])-mean(tlbg[tl110bg,i])*length(tl110tot)))*100 
@@ -226,14 +226,13 @@ for (i in 1:n.aliquots) {
 }
 
 #condense data
-data <- data.frame(samples, sens.irsl, irsl.cts, sens.osl, fast.prop, med.prop, slow.prop, osl.cts, sens.tl325, tl325.cts, tl325pos, sens.tl110, tl110.cts, tl110pos)
+data <- data.frame(samples, sens.irsl, irsl.cts, sens.osl, osl.cts, fast.prop, med.prop, slow.prop, sens.tl325, tl325.cts, tl325pos, sens.tl110, tl110.cts, tl110pos)
 table.samples <- aggregate(data[2:length(data)], list(data$samples), mean, na.rm = T)
 table.samples.sd <- aggregate(data[2:length(data)], list(data$samples), sd, na.rm = T)
 res.sample <- do.call('data.frame', lapply(1:ncol(table.samples), 
                                      function(j) cbind(ts(table.samples[,j]), 
                                                        ts(table.samples.sd[,j]))))
-res.sample <- res.sample[,3:ncol(res.sample)] %>% 
-  add_column(unique(samples), .before = 1)
+res.sample <- res.sample[,2:length(res.sample)]
 colnames(res.sample) <- c('Sample', 'IRSL/BOSL1s','IRSL/BOSL1s.sd', 'IRSL cts', 'IRSL cts.sd', 
                     'BOSL1s','BOSL1s.sd', 'fast', 'fast.sd', 'medium', 'medium.sd','slow','slow.sd', 
                     'OSL cts', 'OSL cts.sd', 'TL325oC','TL325oC.sd', 'TL325 cts','TL325 cts.sd', 
@@ -241,5 +240,5 @@ colnames(res.sample) <- c('Sample', 'IRSL/BOSL1s','IRSL/BOSL1s.sd', 'IRSL cts', 
 view(res.sample)
 
 #setwd('data')
-write.xlsx(data, file = paste0(str_sub(sample, 1, -6),'.xlsx'), sheetName = 'by_aliquot', append = T)
-write.xlsx(res.sample, file = paste0(str_sub(sample, 1, -6),'.xlsx'), sheetName = 'by_sample', append = T)
+write.csv(data, file = paste0(str_sub(sample, 1, -6),'_by_aliquot.csv'))#, sheetName = 'by_aliquot', append = T)
+write.csv(res.sample, file = paste0(str_sub(sample, 1, -6),'_by_sample.csv'))#, sheetName = 'by_sample', append = T)
