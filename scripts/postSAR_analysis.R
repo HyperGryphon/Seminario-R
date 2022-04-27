@@ -102,12 +102,6 @@ for (i in unique(sample0@METADATA$POSITION)) {
   #dev.off()
   
   sar$rejection.criteria[c(1,2,4)]
-  IR.dep.ratio <- (((t(sar$LnLxTnTx.table$LnLx)[8]-t(sar$LnLxTnTx.table$LnLx.BG)[8])/
-                      (t(sar$LnLxTnTx.table$TnTx)[7]-t(sar$LnLxTnTx.table$TnTx.BG)[7]))/
-                     ((t(sar$LnLxTnTx.table$LnLx)[7]-t(sar$LnLxTnTx.table$LnLx.BG)[7])/
-                        (t(sar$LnLxTnTx.table$TnTx)[7]-t(sar$LnLxTnTx.table$TnTx.BG)[7])))
-  IRSL.BLSL.ratio <- sum(sample[15]$IRSL[1:4])/sum(sample[16]$OSL[1:4])*100
-  
   results0[i,] <- data.frame(De = De.data$De, De.err = De.data$De.Error, D0 = De.data$D0,
                             Recycling = sar$rejection.criteria$Value[1], 
                             Recuperation = sar$rejection.criteria$Value[3]*100)
