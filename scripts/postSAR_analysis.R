@@ -4,18 +4,18 @@ graphics.off()
 library(Luminescence); library(Hmisc); library(tidyverse)
 
 setwd('C:/Users/iande/Documentos/git/Seminario-R/')
-sample0 <- read_BIN2R('data/Dating_L1415_R2_191220.binx')
+sample0 <- read_BIN2R('data/Dating_pIR290_L1420_L1426_R2_200327.binx')
 
 name <- stringr::str_sub(sample0@METADATA$FNAME[1], 8, 12)
 
 set.seed(123)
-results0 <- data.frame(matrix(NA,24,7))
+results0 <- data.frame(matrix(NA,24,5))
 for (i in unique(sample0@METADATA$POSITION)) {
   aliquot <- i
   run <- 3
   method <- 'EXP'
   dose.rate <- sample0@METADATA$IRR_DOSERATE[1]
-  sample <- subset(sample0, sample0@METADATA$TEMPERATURE == 125)# & sample@METADATA$RUN>8)
+  sample <- subset(sample0, sample0@METADATA$TEMPERATURE == 290)# & sample@METADATA$RUN>8)
   
   #convertir .binx a RLum, indicar numero de alicuotas
   sample <- Risoe.BINfileData2RLum.Analysis(sample, pos = aliquot)
@@ -25,9 +25,9 @@ for (i in unique(sample0@METADATA$POSITION)) {
   #analizar secuencia pIRIR definiendo canales a usar, background y la secuencia
   sar <- analyse_SAR.CWOSL(sample,
                            signal.integral.min = c(1,1),
-                           signal.integral.max = c(8,8),
-                           background.integral.min = c(301,301),
-                           background.integral.max = c(400,400),
+                           signal.integral.max = c(20,20),
+                           background.integral.min = c(1801,1801),
+                           background.integral.max = c(2000,2000),
                            xlab = 'Dose (Gy)',
                            ylab = 'Lx/Tx',
                            fit.method = method,
@@ -110,12 +110,11 @@ for (i in unique(sample0@METADATA$POSITION)) {
   
   results0[i,] <- data.frame(De = De.data$De, De.err = De.data$De.Error, D0 = De.data$D0,
                             Recycling = sar$rejection.criteria$Value[1], 
-                            Recuperation = sar$rejection.criteria$Value[3]*100,
-                            IR.dep.ratio, IRSL.BLSL.ratio)
+                            Recuperation = sar$rejection.criteria$Value[3]*100)
 }
 
 results <- results0[unique(sample0@METADATA$POSITION),]
-colnames(results) <- c('De','De.err','D0','Recycling','Recuperation','IR.dep.ratio','IRSL.BLSL.ratio')
+colnames(results) <- c('De','De.err','D0','Recycling','Recuperation')
 #View(results)
 
 results.subset <- subset(results, Recycling<=1.11 & Recycling>=0.89 & Recuperation<=6) %>%
